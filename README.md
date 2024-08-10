@@ -15,3 +15,7 @@ Here, I will just record some major modifications
     ```ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur10e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true launch_rviz:=true```
     Then, in another terminal, run: 
     ```ros2 launch ur_moveit_servo teleop_sys_launch.py```
+
+## Gripper Integration
+- Successfully integrate the Robotiq gripper (2F-85/140)
+    - The code requires that the gripper be connected to the robot through the wrist M8 connector or the tool I/O in the control box. In other words, it does not control an independent controller but rather runs through the UR robot. Another package may be written to independently control the gripper in the future if there is such a need.
