@@ -1,5 +1,9 @@
 This package is some additions to the [official UR ROS2 driver](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/humble) that enables teleoperation (with Moveit Servo) and some more visualization. Developed at [AI4CE Lab](https://ai4ce.github.io/) at NYU.
 
+To use these packages, please first follow the official installation for the original ROS2 driver, and then place this repo in a folder in your ROS2 workspace.
+
+Each folder of this repo is an independent ROS2 package.
+
 Here, I will just record some major modifications
 
 
