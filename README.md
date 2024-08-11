@@ -20,6 +20,14 @@ Here, I will just record some major modifications
     ```ros2 launch ur_moveit_servo teleop_sys_launch.py```
 - Add speed multiplier as a launch parameter to the teleoperation system.
 
-## Gripper Integration
-- Successfully integrate the Robotiq gripper (2F-85/140)
-    - The code requires that the gripper be connected to the robot through the wrist M8 connector or the tool I/O in the control box. In other words, it does not control an independent controller but rather runs through the UR robot. Another package may be written to independently control the gripper in the future if there is such a need.
+## EFF Integration
+### Robotiq 2F-85
+#### Program
+- The code requires that the gripper be connected to the robot through the wrist M8 connector or the tool I/O in the control box. In other words, it does not control an independent controller but rather runs through the UR robot. 
+- Another package may be written to independently control the gripper in the future if there is such a need.
+#### Visualization
+- Added `ur_robotiq_description` package to integrate the mesh and urdf of the gripper.
+- Added `2f_85/collision` and `2f_85/visual` to `ur_robotiq_description/mesh`
+- Added `2f_85/robotiq_2f_85_macro.urdf.xacro` to `ur_robotiq_description/urdf`
+- Modified `ur_robotiq_description/urdf/ur_macro.xacro`, `ur_robotiq_description/urdf/ur.urdf.xacro` to include the macro for the gripper
+- Modified `ur_robotiq_description/launch/view_ur.launch.py)` to properly load the new urdf file and visualize the robot.

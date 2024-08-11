@@ -30,7 +30,9 @@
    <xacro:arg name="reverse_port" default="50001"/>
    <xacro:arg name="script_sender_port" default="50002"/>
    <xacro:arg name="trajectory_port" default="50003"/>
+
    <!--   tool communication related parameters-->
+   <xacro:arg name="tool_choice" default="none" />
    <xacro:arg name="use_tool_communication" default="false" />
    <xacro:arg name="tool_voltage" default="0" />
    <xacro:arg name="tool_parity" default="0" />
@@ -76,6 +78,7 @@
      sim_ignition="$(arg sim_ignition)"
      headless_mode="$(arg headless_mode)"
      initial_positions="${xacro.load_yaml(initial_positions_file)}"
+     tool_choice="$(arg tool_choice)"
      use_tool_communication="$(arg use_tool_communication)"
      tool_voltage="$(arg tool_voltage)"
      tool_parity="$(arg tool_parity)"

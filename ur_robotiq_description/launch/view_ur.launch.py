@@ -28,6 +28,7 @@
 #
 # Author: Denis Stogl
 
+from json import tool
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
@@ -45,6 +46,16 @@ def generate_launch_description():
             choices=["ur3", "ur3e", "ur5", "ur5e", "ur10", "ur10e", "ur16e", "ur20", "ur30"],
         )
     )
+
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "tool_choice",
+            default_value="robotiq_2f_85",
+            description="Tool mounted on the robot.",
+            choices=["none", "robotiq_2f_85"],
+        )
+    )
+
     declared_arguments.append(
         DeclareLaunchArgument(
             "safety_limits",
@@ -97,6 +108,7 @@ def generate_launch_description():
     safety_limits = LaunchConfiguration("safety_limits")
     safety_pos_margin = LaunchConfiguration("safety_pos_margin")
     safety_k_position = LaunchConfiguration("safety_k_position")
+    tool_choice = LaunchConfiguration("tool_choice")
     # General arguments
     description_package = LaunchConfiguration("description_package")
     description_file = LaunchConfiguration("description_file")
@@ -125,6 +137,9 @@ def generate_launch_description():
             " ",
             "tf_prefix:=",
             tf_prefix,
+            " ",
+            "tool_choice:=",
+            tool_choice,
         ]
     )
     robot_description = {"robot_description": robot_description_content}
