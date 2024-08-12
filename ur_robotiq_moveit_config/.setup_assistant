@@ -1,0 +1,26 @@
+moveit_setup_assistant_config:
+  urdf:
+    package: ur_robotiq_description
+    relative_path: urdf/ur.urdf.xacro
+    xacro_args: ur_type:=ur10e tool_choice:=robotiq_2f_85
+  srdf:
+    relative_path: config/ur.srdf
+  package_settings:
+    author_name: Irving Fang
+    author_email: irving.fang@nyu.edu
+    generated_timestamp: 1723421944
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity
+  modified_urdf:
+    xacros:
+      - control_xacro
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity
