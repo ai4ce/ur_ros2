@@ -24,6 +24,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'ur_robotiq_server = ur_robotiq_interface.ur_robotiq_server:main',
+            'ur_robotiq_test = ur_robotiq_interface.test_client:main',
         ],
     },
 )
