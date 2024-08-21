@@ -14,10 +14,6 @@ scaled_joint_trajectory_controller:
     - wrist_1_joint
     - wrist_2_joint
     - wrist_3_joint
-    - robotiq_85_base_joint
-    - robotiq_85_left_knuckle_joint
-    - robotiq_85_left_finger_joint
-    - robotiq_85_left_finger_tip_link
 
 
 joint_trajectory_controller:
@@ -31,7 +27,3 @@ joint_trajectory_controller:
     - wrist_1_joint
     - wrist_2_joint
     - wrist_3_joint
-    - robotiq_85_base_joint
-    - robotiq_85_left_knuckle_joint
-    - robotiq_85_left_finger_joint
-    - robotiq_85_left_finger_tip_link
