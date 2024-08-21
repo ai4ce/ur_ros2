@@ -82,11 +82,17 @@ int main(int argc, char** argv)
   // ^^^^^^^^^^^^^^^^^^^^^^^
   // We can plan a motion for this group to a desired pose for the
   // end-effector.
+
+  // get the current pose
+  geometry_msgs::msg::PoseStamped current_pose = move_group.getCurrentPose();
+  
+
   geometry_msgs::msg::Pose target_pose1;
-  target_pose1.orientation.w = 1.0;
-  target_pose1.position.x = 0.28;
-  target_pose1.position.y = -0.2;
-  target_pose1.position.z = 0.5;
+  
+  // set the target pose as the current pose but with a different z value
+  target_pose1 = current_pose.pose;
+  target_pose1.position.z += 0.1;
+  
   move_group.setPoseTarget(target_pose1);
 
   // Now, we call the planner to compute the plan and visualize it.
@@ -115,7 +121,7 @@ int main(int argc, char** argv)
   // and report success on execution of a trajectory.
 
   /* Uncomment below line when working with a real robot */
-  /* move_group.move(); */
+  move_group.move(); 
 
 
   rclcpp::shutdown();
