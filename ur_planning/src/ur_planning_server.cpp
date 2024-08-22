@@ -4,22 +4,19 @@
 #include <moveit_msgs/msg/display_robot_state.hpp>
 #include <moveit_msgs/msg/display_trajectory.hpp>
 
-#include <moveit_msgs/msg/attached_collision_object.hpp>
-#include <moveit_msgs/msg/collision_object.hpp>
-
-// #include <moveit_visual_tools/moveit_visual_tools.h>
+#include "ur_custom_msgs/srv/move_to.hpp"
 
 // All source files that use ROS logging should define a file-specific
 // static const rclcpp::Logger named LOGGER, located at the top of the file
 // and inside the namespace with the narrowest scope (if there is one)
-static const rclcpp::Logger LOGGER = rclcpp::get_logger("move_group_demo");
+static const rclcpp::Logger LOGGER = rclcpp::get_logger("ur_planning_server");
 
 int main(int argc, char** argv)
 {
   rclcpp::init(argc, argv);
   rclcpp::NodeOptions node_options;
   node_options.automatically_declare_parameters_from_overrides(true);
-  auto move_group_node = rclcpp::Node::make_shared("move_group_interface_tutorial", node_options);
+  auto move_group_node = rclcpp::Node::make_shared("ur_planning_server", node_options);
 
   // We spin up a SingleThreadedExecutor for the current state monitor to get information
   // about the robot's state.
@@ -27,11 +24,7 @@ int main(int argc, char** argv)
   executor.add_node(move_group_node);
   std::thread([&executor]() { executor.spin(); }).detach();
 
-  // BEGIN_TUTORIAL
-  //
-  // Setup
-  // ^^^^^
-  //
+
   // MoveIt operates on sets of joints called "planning groups" and stores them in an object called
   // the ``JointModelGroup``. Throughout MoveIt, the terms "planning group" and "joint model group"
   // are used interchangeably.
@@ -52,17 +45,6 @@ int main(int argc, char** argv)
       move_group.getCurrentState()->getJointModelGroup(PLANNING_GROUP);
 
 
-
-  /* Remote control is an introspection tool that allows users to step through a high level script */
-  /* via buttons and keyboard shortcuts in RViz */
-
-
-  // RViz provides many types of markers, in this demo we will use text, cylinders, and spheres
-
-
-  // Getting Basic Information
-  // ^^^^^^^^^^^^^^^^^^^^^^^^^
-  //
   // We can print the name of the reference frame for this robot.
   RCLCPP_INFO(LOGGER, "Planning frame: %s", move_group.getPlanningFrame().c_str());
 
@@ -74,14 +56,6 @@ int main(int argc, char** argv)
   std::copy(move_group.getJointModelGroupNames().begin(), move_group.getJointModelGroupNames().end(),
             std::ostream_iterator<std::string>(std::cout, ", "));
 
-  // Start the demo
-  // ^^^^^^^^^^^^^^^^^^^^^^^^^
-  // .. _move_group_interface-planning-to-pose-goal:
-  //
-  // Planning to a Pose goal
-  // ^^^^^^^^^^^^^^^^^^^^^^^
-  // We can plan a motion for this group to a desired pose for the
-  // end-effector.
 
   // get the current pose
   geometry_msgs::msg::PoseStamped current_pose = move_group.getCurrentPose();
@@ -110,17 +84,6 @@ int main(int argc, char** argv)
   RCLCPP_INFO(LOGGER, "Visualizing plan 1 as trajectory line");
 
   // Moving to a pose goal
-  // ^^^^^^^^^^^^^^^^^^^^^
-  //
-  // Moving to a pose goal is similar to the step above
-  // except we now use the ``move()`` function. Note that
-  // the pose goal we had set earlier is still active
-  // and so the robot will try to move to that goal. We will
-  // not use that function in this tutorial since it is
-  // a blocking function and requires a controller to be active
-  // and report success on execution of a trajectory.
-
-  /* Uncomment below line when working with a real robot */
   move_group.move(); 
 
 

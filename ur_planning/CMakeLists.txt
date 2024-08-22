@@ -30,6 +30,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   tf2_geometry_msgs
   tf2_geometry_msgs
   tf2_ros
+  ur_custom_msgs
 )
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
@@ -43,6 +44,8 @@ target_include_directories(ur_planning_server PUBLIC
 ament_target_dependencies(ur_planning_server
   rclcpp
   moveit_ros_planning_interface
+  moveit_core
+  ur_custom_msgs
 )
 target_compile_features(ur_planning_server PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 
