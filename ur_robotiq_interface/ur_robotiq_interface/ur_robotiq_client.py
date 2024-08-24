@@ -8,13 +8,18 @@ from std_srvs.srv import Empty
 
 from threading import Thread
 
-class URRobotiqClient(Node):
+class URRobotiqClient:
     '''
-    This node interfaces the UR Robot with a typical Robotiq gripper (2F-85/140).
-    Note that this nodes required the gripper to be connected to the robot either through the wrist 8-pin or the tool I/O.
+    This class interfaces the UR Robot with a typical Robotiq gripper (2F-85/140).
+    Note that it requires the gripper to be connected to the robot either through the wrist 8-pin or the tool I/O in the control box
+    
+    Also note that this is not a ROS2 node, but a client that can be used by other nodes to interface with the robot
+    as the result, it cannot accept launch parameters. You can use another node to create this object and use it in your code
     '''
     def __init__(self):
-        super().__init__('ur_robotiq_client')  # type: ignore
+
+
+        # super().__init__('ur_robotiq_client')  # type: ignore
         
         ############################ Launch Parameters ################################
         # parameter handling
@@ -22,22 +27,22 @@ class URRobotiqClient(Node):
 
         ############################ Service Setup ####################################
         self.my_callback_group = ReentrantCallbackGroup()
-
-        self.pick_client = self.create_client(
+        self.node = Node('ur_robotiq_client')
+        self.pick_client = self.node.create_client(
         srv_type=Empty, 
         srv_name='/ur_robotiq_interface/pick')
         while not self.pick_client.wait_for_service(timeout_sec=1.0):
             self.get_logger().info('pick service not available, waiting again...')
         self.pick_request = Empty.Request()
 
-        self.place_client = self.create_client(
+        self.place_client = self.node.create_client(
         srv_type=Empty, 
         srv_name='/ur_robotiq_interface/place')
         while not self.pick_client.wait_for_service(timeout_sec=1.0):
             self.get_logger().info('place service not available, waiting again...')
         self.place_request = Empty.Request()
 
-        self.set_force_client = self.create_client(
+        self.set_force_client = self.node.create_client(
         srv_type=Empty,
         srv_name='/ur_robotiq_interface/set_force')
         while not self.pick_client.wait_for_service(timeout_sec=1.0):
