@@ -7,6 +7,11 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+
+# enabling mixing C++ and Python
+find_package(ament_cmake_python REQUIRED)
+find_package(rclpy REQUIRED)
+find_package(rclcpp REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
@@ -25,7 +30,6 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   moveit_ros_planning
   moveit_ros_planning_interface
   pluginlib
-  rclcpp
   rclcpp_action
   tf2_geometry_msgs
   tf2_geometry_msgs
@@ -53,11 +57,18 @@ ament_export_dependencies(
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
 
+ament_python_install_package(${PROJECT_NAME})
+
 install(TARGETS ur_planning_server
   DESTINATION lib/${PROJECT_NAME})
 
-  install(DIRECTORY launch
+install(DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}
+)
+install(PROGRAMS
+  ur_planning/ur_planning_client.py
+  ur_planning/lqm.py
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 if(BUILD_TESTING)

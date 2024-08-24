@@ -10,6 +10,7 @@
 #include <thread>
 
 #include "ur_custom_msgs/srv/move_to.hpp"
+#include "ur_custom_msgs/srv/get_pose.hpp"
 
 // All source files that use ROS logging should define a file-specific
 // static const rclcpp::Logger named LOGGER, located at the top of the file
@@ -37,18 +38,19 @@ class URPlanningServer : public rclcpp::Node
       // The move group interface
       move_group = moveit::planning_interface::MoveGroupInterface(move_group_node, PLANNING_GROUP);
 
-      // move_group_interface = move_group;
-      // Planning scene will be used for collision setup
-      
-
       // Raw pointers are frequently used to refer to the planning group for improved performance.
       joint_model_group = move_group.getCurrentState()->getJointModelGroup(PLANNING_GROUP);
 
 
       ////////////////////////// Service Setup //////////////////////////////////////////////////////////
       moveto_service = this->create_service<ur_custom_msgs::srv::MoveTo>(
-        "ur_planning/moveto",
+        "ur_planning/move_to",
         std::bind(&URPlanningServer::moveto_callback, this, std::placeholders::_1, std::placeholders::_2)
+      );
+
+      getpose_service = this->create_service<ur_custom_msgs::srv::GetPose>(
+        "ur_planning/get_pose",
+        std::bind(&URPlanningServer::getpose_callback, this, std::placeholders::_1, std::placeholders::_2)
       );
       
 
@@ -65,7 +67,9 @@ class URPlanningServer : public rclcpp::Node
     geometry_msgs::msg::Pose target_pose;
     moveit::planning_interface::MoveGroupInterface::Plan my_plan;
     rclcpp::Service<ur_custom_msgs::srv::MoveTo>::SharedPtr moveto_service;
+    rclcpp::Service<ur_custom_msgs::srv::GetPose>::SharedPtr getpose_service;
     moveit::planning_interface::MoveGroupInterface move_group;
+    // Planning scene will be used for collision setup
     moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
 
     void moveto_callback(const std::shared_ptr<ur_custom_msgs::srv::MoveTo::Request> request,
@@ -86,6 +90,13 @@ class URPlanningServer : public rclcpp::Node
       this->move_group.move(); 
       response->success = true;
     }
+
+    void getpose_callback(const std::shared_ptr<ur_custom_msgs::srv::GetPose::Request> request,
+                          std::shared_ptr<ur_custom_msgs::srv::GetPose::Response> response)
+    {
+      RCLCPP_INFO(LOGGER, "Received request to get pose");
+      response->current_pose = move_group.getCurrentPose().pose;
+    }
 };
 
 int main(int argc, char** argv)
@@ -96,6 +107,7 @@ int main(int argc, char** argv)
   auto move_group_node = rclcpp::Node::make_shared("ur_planning_move_group", node_options);
 
   URPlanningServer ur_planning_server(move_group_node);
+  rclcpp::spin(move_group_node);
 
   rclcpp::shutdown();
   return 0;
