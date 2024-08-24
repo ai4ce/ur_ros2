@@ -220,7 +220,7 @@ def launch_setup(context, *args, **kwargs):
         ],
     )
     ur_planning_server_node = Node(
-        name="move_group_interface_tutorial",
+        name="ur_planning_server",
         package="ur_planning",
         executable="ur_planning_server",
         output="screen",
