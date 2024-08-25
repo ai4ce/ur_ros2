@@ -4,6 +4,32 @@ To use these packages, please first follow the official installation for the ori
 
 Each folder of this repo is an independent ROS2 package.
 
+# Operating the Robot
+### Bringup
+`ros2 launch ur_robotiq_description ur_bringup.launch.py ur_type:=ur10e robot_ip:=yyy.yyy.yyy.yyy`
+
+This is the same as the official `ur_robot_driver ur_control.launch.py`, but with some modifications to fit our lab's need.
+
+Some notable parameters:
+- `fake_hardware`: whether to only run things on RViz and such. False if you are working with the real robot.
+- `launch_rviz`: whether to turn on RViz to see the robot model.
+- `tool_choice`: which EEF tools to use, if any.
+
+
+### MoveIt Manual Planning
+`ros2 launch ur_robotiq_moveit_config ur_robotiq_moveit.launch.py ur_type:=ur10e`
+
+Similar parameters choices as above.
+
+
+### `ur_planning`
+`ros2 launch ur_planning ur_planning_sys.launch.py ur_type:=ur10e`
+
+
+Again, similar parameters choices.
+
+
+# Major Modifications
 Here, I will just record some major modifications
 
 
