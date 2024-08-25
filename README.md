@@ -25,6 +25,9 @@ Here, I will just record some major modifications
 #### Program
 - The code requires that the gripper be connected to the robot through the wrist M8 connector or the tool I/O in the control box. In other words, it does not control an independent controller but rather runs through the UR robot. 
 - Another package may be written to independently control the gripper in the future if there is such a need.
+- In the URDF, I turned on `use_fake_hardware` and `fake_sensor_commands`, because we don't actually control it through ROS, but through the MBUS connector. 
+    - This may change if we need to write an independent driver. 
+    - This is crucial for successfully configuring the gripper for the `robot_state_publisher` and smooth logging in MoveIt. Otherwise MoveIt will complain nonstop about missing the gripper, despite the fact that it can still control the robot fine.
 #### Visualization
 - Added `ur_robotiq_description` package to integrate the mesh and urdf of the gripper.
 - Added `2f_85/collision` and `2f_85/visual` to `ur_robotiq_description/mesh`

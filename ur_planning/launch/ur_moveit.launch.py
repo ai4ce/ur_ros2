@@ -230,6 +230,14 @@ def launch_setup(context, *args, **kwargs):
             robot_description_kinematics,
         ],
     )
+    
+    # robot_state_publisher = Node(
+    #     package="robot_state_publisher",
+    #     executable="robot_state_publisher",
+    #     name="robot_state_publisher",
+    #     output="both",
+    #     parameters=[robot_description],
+    # )
     # rviz with moveit configuration
     rviz_config_file = PathJoinSubstitution(
         [FindPackageShare(moveit_config_package), "rviz", "view_robot.rviz"]
