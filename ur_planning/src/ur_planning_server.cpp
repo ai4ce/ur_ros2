@@ -1,5 +1,7 @@
 #include <rclcpp/service.hpp>
 #include <rclcpp/node.hpp>
+#include <rclcpp/qos.hpp>
+#include <rclcpp/qos_event.hpp>
 
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
@@ -43,15 +45,22 @@ class URPlanningServer : public rclcpp::Node
 
 
       ////////////////////////// Service Setup //////////////////////////////////////////////////////////
+      auto my_callback_group = this->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
+
+      // rclcpp::ServiceOptions options;
+      // options.callback_group = my_callback_group;
+
       moveto_service = this->create_service<ur_custom_msgs::srv::MoveTo>(
         "ur_planning/move_to",
-        std::bind(&URPlanningServer::moveto_callback, this, std::placeholders::_1, std::placeholders::_2)
+        std::bind(&URPlanningServer::moveto_callback, this, std::placeholders::_1, std::placeholders::_2),
+        rmw_qos_profile_services_default,
+        my_callback_group
       );
 
-      getpose_service = this->create_service<ur_custom_msgs::srv::GetPose>(
-        "ur_planning/get_pose",
-        std::bind(&URPlanningServer::getpose_callback, this, std::placeholders::_1, std::placeholders::_2)
-      );
+      // getpose_service = this->create_service<ur_custom_msgs::srv::GetPose>(
+      //   "ur_planning/get_pose",
+      //   std::bind(&URPlanningServer::getpose_callback, this, std::placeholders::_1, std::placeholders::_2)
+      // );
       
 
       // We can print the name of the reference frame for this robot.
@@ -67,7 +76,7 @@ class URPlanningServer : public rclcpp::Node
     geometry_msgs::msg::Pose target_pose;
     moveit::planning_interface::MoveGroupInterface::Plan my_plan;
     rclcpp::Service<ur_custom_msgs::srv::MoveTo>::SharedPtr moveto_service;
-    rclcpp::Service<ur_custom_msgs::srv::GetPose>::SharedPtr getpose_service;
+    // rclcpp::Service<ur_custom_msgs::srv::GetPose>::SharedPtr getpose_service;
     moveit::planning_interface::MoveGroupInterface move_group;
     // Planning scene will be used for collision setup
     moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
@@ -91,12 +100,12 @@ class URPlanningServer : public rclcpp::Node
       response->success = true;
     }
 
-    void getpose_callback(const std::shared_ptr<ur_custom_msgs::srv::GetPose::Request> request,
-                          std::shared_ptr<ur_custom_msgs::srv::GetPose::Response> response)
-    {
-      RCLCPP_INFO(LOGGER, "Received request to get pose");
-      response->current_pose = move_group.getCurrentPose().pose;
-    }
+    // void getpose_callback(const std::shared_ptr<ur_custom_msgs::srv::GetPose::Request> request,
+    //                       std::shared_ptr<ur_custom_msgs::srv::GetPose::Response> response)
+    // {
+    //   RCLCPP_INFO(LOGGER, "Received request to get pose");
+    //   response->current_pose = move_group.getCurrentPose().pose;
+    // }
 };
 
 int main(int argc, char** argv)
@@ -106,9 +115,16 @@ int main(int argc, char** argv)
   node_options.automatically_declare_parameters_from_overrides(true);
   auto move_group_node = rclcpp::Node::make_shared("ur_planning_move_group", node_options);
 
-  URPlanningServer ur_planning_server(move_group_node);
-  rclcpp::spin(move_group_node);
+  auto ur_planning_server = std::make_shared<URPlanningServer>(move_group_node);
 
-  rclcpp::shutdown();
+  // rclcpp::executors::MultiThreadedExecutor main_executor;
+  // main_executor.add_node(ur_planning_server);
+  // std::thread([&executor]() { main_executor.spin(); }).detach();
+  
+  while (rclcpp::ok())
+  {
+    rclcpp::spin_some(ur_planning_server);
+  }
+
   return 0;
 }

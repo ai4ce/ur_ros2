@@ -38,11 +38,11 @@ class URPlanningClient:
             self.node.get_logger().info('move to service not available, waiting again...')
         self.moveto_request = MoveTo.Request()
 
-        self.getpose_client = self.node.create_client(
-        srv_type=GetPose,
-        srv_name='/ur_planning/get_pose')
-        while not self.getpose_client.wait_for_service(timeout_sec=1.0):
-            self.node.get_logger().info('get pose service not available, waiting again...')
+        # self.getpose_client = self.node.create_client(
+        # srv_type=GetPose,
+        # srv_name='/ur_planning/get_pose')
+        # while not self.getpose_client.wait_for_service(timeout_sec=1.0):
+        #     self.node.get_logger().info('get pose service not available, waiting again...')
 
         # ############################ TF Setup #########################################
         # buffer to hold the transform in a cache

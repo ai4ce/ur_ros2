@@ -29,8 +29,8 @@ Similar parameters choices as above.
 Again, similar parameters choices.
 
 
-# Major Modifications
-Here, I will just record some major modifications
+# Major Modifications/Additions
+Here, I will just record some major modifications and additions I made to the official UR repos.
 
 
 ## Teleoperation 
