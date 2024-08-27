@@ -6,6 +6,7 @@ Example of moving to a pose goal.
 - ros2 run pymoveit2 ex_pose_goal.py --ros-args -p position:="[0.25, 0.0, 1.0]" -p quat_xyzw:="[0.0, 0.0, 0.0, 1.0]" -p cartesian:=False -p synchronous:=False -p cancel_after_secs:=0.0
 """
 
+import time
 from threading import Thread
 
 import rclpy
@@ -13,6 +14,26 @@ from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.node import Node
 
 from pymoveit2 import MoveIt2, MoveIt2State
+
+def collision_setup(moveit2):
+    clear_collision_future = moveit2.clear_all_collision_objects()
+    
+    # Wait until the future is done
+    while not clear_collision_future.done():
+        time.sleep(0.1)
+    
+
+    moveit2.add_collision_box(
+        id='table', position=(1, 0.0, 0.5), quat_xyzw=(0.0, 0.0, 0.0, 1.0), size=(0.4, 1, 1)
+    )
+
+    moveit2.add_collision_box(
+        id='left_wall', position=(0.0, -0.5, 0.5), quat_xyzw=(0.0, 0.0, 0.0, 1.0), size=(1, 0.3, 1)
+    )
+
+    moveit2.add_collision_box(
+        id='back_wall', position=(-0.5, 1.0, 0.5), quat_xyzw=(0.0, 0.0, 0.0, 1.0), size=(1, 1, 0.3)
+    )
 
 
 def main():
@@ -93,6 +114,9 @@ def main():
     # Set parameters for cartesian planning
     moveit2.cartesian_avoid_collisions = cartesian_avoid_collisions
     moveit2.cartesian_jump_threshold = cartesian_jump_threshold
+    
+    # Setup collision objects
+    collision_setup(moveit2)
 
     # Move to pose
     node.get_logger().info(
