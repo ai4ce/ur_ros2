@@ -1,122 +1,136 @@
 #!/usr/bin/env python3
 
-import rclpy
+import time
+from threading import Thread
+
 from rclpy.node import Node
 from rclpy.callback_groups import ReentrantCallbackGroup
-from rclpy.executors import SingleThreadedExecutor, MultiThreadedExecutor
-
+from rclpy.executors import MultiThreadedExecutor
 from rclpy.time import Time
 from rclpy.duration import Duration
 
-from tf2_ros.static_transform_broadcaster import StaticTransformBroadcaster
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
 
-from ur_custom_msgs.srv import MoveTo, GetPose
 from geometry_msgs.msg import Pose
-from threading import Thread
+
+from pymoveit2 import MoveIt2
+
 
 class URPlanningClient:
-    '''
-    Note that this is not a ROS2 node, but a client that can be used by other nodes to interface with the robot
-    as the result, it cannot accept launch parameters. You can use another node to create this object and use it in your code'''
     def __init__(self):
-        # super().__init__('ur_planning_client')  # type: ignore
+        self.node = Node("ur_planning_client")
+
+        ################################## Launch Parameters ######################################
+        self.node.declare_parameter("synchronous", True)
+        # Planner ID
+        self.node.declare_parameter("planner_id", "RRTConnectkConfigDefault")
+        # Declare parameters for cartesian planning
+        self.node.declare_parameter("cartesian_planning", False)
+        self.node.declare_parameter("cartesian_max_step", 0.0025)
+        self.node.declare_parameter("cartesian_fraction_threshold", 0.0)
+        self.node.declare_parameter("cartesian_jump_threshold", 0.0)
+        self.node.declare_parameter("cartesian_avoid_collisions", False)
+
+        ################################## Miscanellous Setup ################################
+        self.callback_group = ReentrantCallbackGroup()
+        self.executor = MultiThreadedExecutor(2)
+        self.executor.add_node(self.node)
+        self.executor_thread = Thread(target=self.executor.spin, daemon=True, args=())
+
+        ################################## MoveIt Setup 1 ######################################
+        self.moveit2 = MoveIt2(
+            node=self.node,
+            joint_names=['shoulder_pan_joint', 
+                         'shoulder_lift_joint', 
+                         'elbow_joint', 
+                         'wrist_1_joint', 
+                         'wrist_2_joint', 
+                         'wrist_3_joint'],
+            base_link_name='base_link',
+            end_effector_name='flange',
+            group_name='arm',
+            callback_group=self.callback_group,
+        )
+
+        self.executor_thread.start()
+        self.node.create_rate(1.0).sleep()
+
+        self.synch = self.node.get_parameter("synchronous").get_parameter_value().bool_value
+    
+        self.planner_id = self.node.get_parameter("planner_id").get_parameter_value().string_value
+        self.cartesian_planning = self.node.get_parameter(
+            "cartesian_planning").get_parameter_value().bool_value
+        self.cartesian_max_step = self.node.get_parameter(
+            "cartesian_max_step").get_parameter_value().double_value
+        self.cartesian_fraction_threshold = self.node.get_parameter(
+            "cartesian_fraction_threshold").get_parameter_value().double_value
+        self.cartesian_jump_threshold = self.node.get_parameter(
+            "cartesian_jump_threshold").get_parameter_value().double_value
+        self.cartesian_avoid_collisions = self.node.get_parameter(
+            "cartesian_avoid_collisions").get_parameter_value().bool_value
+
+        self.moveit2.planner_id = self.planner_id
+        self.moveit2.max_velocity = 0.5
+        self.moveit2.max_acceleration = 0.5
+        self.moveit2.cartesian_avoid_collisions = False
+        self.moveit2.cartesian_jump_threshold = 0.0
         
-        ############################ Launch Parameters ################################
-        # parameter handling
+        self.collision_setup(self.moveit2)
 
-
-        ############################ Service Setup ####################################
-        self.my_callback_group = ReentrantCallbackGroup()
-        self.node = Node('ur_planning_client')
-
-        self.moveto_client = self.node.create_client(
-        srv_type=MoveTo, 
-        srv_name='/ur_planning/move_to')
-        while not self.moveto_client.wait_for_service(timeout_sec=1.0):
-            self.node.get_logger().info('move to service not available, waiting again...')
-        self.moveto_request = MoveTo.Request()
-
-        # self.getpose_client = self.node.create_client(
-        # srv_type=GetPose,
-        # srv_name='/ur_planning/get_pose')
-        # while not self.getpose_client.wait_for_service(timeout_sec=1.0):
-        #     self.node.get_logger().info('get pose service not available, waiting again...')
-
-        # ############################ TF Setup #########################################
+        ############################# TF Setup #########################################
         # buffer to hold the transform in a cache
         self.tf_buffer = Buffer()
 
         # listener. Important to spin a thread, otherwise the listen will block and no TF can be updated
-        self.tf_listener = TransformListener(buffer=self.tf_buffer, node=self.node, spin_thread=True)
+        self.tf_listener = TransformListener(buffer=self.tf_buffer, node=self.node, spin_thread=False)
 
-        ############################ Miscanellous Setup ###############################
-        # self.executor = MultiThreadedExecutor()
-        # self.dedicated_client_thread = Thread(target=self.run)
-        # self.dedicated_client_thread.start()
-
-    def run(self):
-        '''
-        Will spawn a dedicated thread to run the executor. This way this object can be used by other nodes
-        '''
-        self.executor.add_node(self.node)
-        self.executor.spin()
-        self.executor.remove_node(self.node)
-
-    def __del__(self) -> None:
-        self.executor.shutdown()
-        self.dedicated_client_thread.join()
-
-    def move_to(self, pose):
-        '''
-        Move the robot to a given pose
-        '''
-        self.node.get_logger().info('Moving to %r' % (pose,))
-        self.moveto_request.target_pose = pose
-        self.future = self.moveto_client.call_async(self.moveto_request)
-        rclpy.spin_until_future_complete(self.node, self.future)
-        # self.future.add_done_callback(self.move_to_callback)
+    def move_to_pose(self, pose):
+        self.moveit2.move_to_pose(
+            pose=pose,
+            cartesian=self.cartesian_planning,
+        )
+        if self.synch:
+            self.moveit2.wait_until_executed()
     
-    def move_to_callback(self, future):
-        '''
-        Callback for the move_to service
-        '''
-        try:
-            response = future.result()
-        except Exception as e:
-            self.get_logger().info('Service call failed %r' % (e,))
-        else:
-            self.get_logger().info('Service call success %r' % (response,))
-
     def get_current_pose(self) -> Pose:
         '''
         Get the current pose of the robot
         '''
-        # self.future = self.getpose_client.call_async(GetPose.Request())
-        # self.future.add_done_callback(self.get_current_pose_callback)
-        # return self.current_pose
-        current_pose = self.tf_buffer.lookup_transform('base_link', 'tool0', Time(), Duration(seconds=2))
-        return current_pose.transform
-    
-    def get_current_pose_callback(self, future):
-        '''
-        Callback for the get_current_pose service
-        '''
-        try:
-            response = future.result()
-        except Exception as e:
-            self.get_logger().info('Service call failed %r' % (e,))
-        else:
-            self.get_logger().info('Service call success %r' % (response,))
-        self.current_pose = response.pose
+        current_transform_stamp = self.tf_buffer.lookup_transform('base_link', 'tool0', Time(), Duration(seconds=2))
+        current_transform = current_transform_stamp.transform
 
+        current_pose = Pose()
+        current_pose.position.x = current_transform.translation.x
+        current_pose.position.y = current_transform.translation.y
+        current_pose.position.z = current_transform.translation.z
+        current_pose.orientation.x = current_transform.rotation.x
+        current_pose.orientation.y = current_transform.rotation.y
+        current_pose.orientation.z = current_transform.rotation.z
+        current_pose.orientation.w = current_transform.rotation.w
 
-def main():
+        return current_pose
 
-    rclpy.init()
-    client = URPlanningClient()
+    def collision_setup(self, moveit2):
+        # clear all collision left from previous runs
+        clear_collision_future = moveit2.clear_all_collision_objects()
+        
+        # Wait until the future is done
+        while not clear_collision_future.done():
+            time.sleep(0.1)
+        
+        moveit2.add_collision_box(
+            id='table', position=(1, 0.0, 0.5), quat_xyzw=(0.0, 0.0, 0.0, 1.0), size=(0.5, 1, 0.5)
+        )
 
+        moveit2.add_collision_box(
+            id='left_wall', position=(0.0, -0.5, 0.5), quat_xyzw=(0.0, 0.0, 0.0, 1.0), size=(1, 0, 1)
+        )
 
-if __name__ == '__main__':
-    main()
+        moveit2.add_collision_box(
+            id='back_wall', position=(-0.5, 0, 0.5), quat_xyzw=(0.0, 0.0, 0.0, 1.0), size=(0, 1, 1)
+        )
+
+        moveit2.add_collision_box(
+            id='floor', position=(0, 0, 0), quat_xyzw=(0.0, 0.0, 0.0, 1.0), size=(1, 1, 0)
+        )
