@@ -18,7 +18,7 @@ from pymoveit2 import MoveIt2
 
 
 class URPlanningClient:
-    def __init__(self):
+    def __init__(self, cartesian_planning=False):
         self.node = Node("ur_planning_client")
 
         ################################## Launch Parameters ######################################
@@ -26,7 +26,6 @@ class URPlanningClient:
         # Planner ID
         self.node.declare_parameter("planner_id", "RRTConnectkConfigDefault")
         # Declare parameters for cartesian planning
-        self.node.declare_parameter("cartesian_planning", False)
         self.node.declare_parameter("cartesian_max_step", 0.0025)
         self.node.declare_parameter("cartesian_fraction_threshold", 0.0)
         self.node.declare_parameter("cartesian_jump_threshold", 0.0)
@@ -59,8 +58,8 @@ class URPlanningClient:
         self.synch = self.node.get_parameter("synchronous").get_parameter_value().bool_value
     
         self.planner_id = self.node.get_parameter("planner_id").get_parameter_value().string_value
-        self.cartesian_planning = self.node.get_parameter(
-            "cartesian_planning").get_parameter_value().bool_value
+        self.cartesian_planning = cartesian_planning
+        
         self.cartesian_max_step = self.node.get_parameter(
             "cartesian_max_step").get_parameter_value().double_value
         self.cartesian_fraction_threshold = self.node.get_parameter(
@@ -120,7 +119,7 @@ class URPlanningClient:
             time.sleep(0.1)
         
         moveit2.add_collision_box(
-            id='table', position=(1, 0.0, 0.5), quat_xyzw=(0.0, 0.0, 0.0, 1.0), size=(0.5, 1, 0.5)
+            id='table', position=(-1, 0.0, 0.2), quat_xyzw=(0.0, 0.0, 0.0, 1.0), size=(0.5, 1, 0.5)
         )
 
         moveit2.add_collision_box(
@@ -128,9 +127,9 @@ class URPlanningClient:
         )
 
         moveit2.add_collision_box(
-            id='back_wall', position=(-0.5, 0, 0.5), quat_xyzw=(0.0, 0.0, 0.0, 1.0), size=(0, 1, 1)
+            id='back_wall', position=(0.5, 0, 0.5), quat_xyzw=(0.0, 0.0, 0.0, 1.0), size=(0, 1, 1)
         )
 
         moveit2.add_collision_box(
-            id='floor', position=(0, 0, 0), quat_xyzw=(0.0, 0.0, 0.0, 1.0), size=(1, 1, 0)
+            id='floor', position=(0, 0, -0.1), quat_xyzw=(0.0, 0.0, 0.0, 1.0), size=(1, 1, 0)
         )
