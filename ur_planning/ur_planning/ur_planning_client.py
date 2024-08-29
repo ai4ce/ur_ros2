@@ -96,7 +96,7 @@ class URPlanningClient:
         '''
         Get the current pose of the robot
         '''
-        current_transform_stamp = self.tf_buffer.lookup_transform('base_link', 'tool0', Time(), Duration(seconds=2))
+        current_transform_stamp = self.tf_buffer.lookup_transform(self.moveit2.base_link_name, self.moveit2.end_effector_name, Time(), Duration(seconds=2))
         current_transform = current_transform_stamp.transform
 
         current_pose = Pose()
