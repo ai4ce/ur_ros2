@@ -67,7 +67,7 @@ install(DIRECTORY launch
 )
 install(PROGRAMS
   ur_planning/ur_planning_client.py
-  ur_planning/lqm.py
+  ur_planning/lmq.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
