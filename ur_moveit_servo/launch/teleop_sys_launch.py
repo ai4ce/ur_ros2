@@ -163,7 +163,7 @@ def generate_launch_description():
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("ur_description"), "urdf", "ur.urdf.xacro"]),
+            PathJoinSubstitution([FindPackageShare("ur_robotiq_description"), "urdf", "ur.urdf.xacro"]),
             " ",
             "robot_ip:=",
             robot_ip,
